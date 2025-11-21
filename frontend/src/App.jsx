@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import { useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
@@ -11,10 +10,10 @@ function App() {
   const [error, setError] = useState("");
   const [expandedItems, setExpandedItems] = useState({});
 
-  const toggleExpand = (index) => {
+  const toggleExpand = (idx) => {
     setExpandedItems(prev => ({
       ...prev,
-      [index]: !prev[index]
+      [idx]: !prev[idx]
     }));
   };
 
@@ -23,30 +22,30 @@ function App() {
     setError("");
     setResults([]);
 
+    // Basic validation
     if (!url || !query) {
-      setError("Please provide both a website URL and a search query.");
+      setError("Need both a URL and a search query!");
       return;
     }
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/api/search`, {
+      
+      const res = await fetch(`${API_BASE}/api/search`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url, query }),
       });
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.detail || "Something went wrong.");
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.detail || "Something went wrong");
       }
 
-      const data = await response.json();
+      const data = await res.json();
       setResults(data.results || []);
     } catch (err) {
-      setError(err.message || "Failed to search. Please try again.");
+      setError(err.message || "Search failed - try again?");
     } finally {
       setLoading(false);
     }
@@ -57,7 +56,7 @@ function App() {
       <header className="header">
         <h1>Website Content Search</h1>
         <p className="subtitle">
-          Search through website content with precision
+          AI-powered semantic search for any website
         </p>
       </header>
 
@@ -67,9 +66,8 @@ function App() {
             <div className="input-group">
               <span className="input-icon">🌐</span>
               <input
-                id="url"
                 type="url"
-                placeholder="https://smarter.codes"
+                placeholder="https://example.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 className="url-input"
@@ -79,9 +77,8 @@ function App() {
               <div className="input-group search-input-group">
                 <span className="input-icon">🔍</span>
                 <input
-                  id="query"
                   type="text"
-                  placeholder="AI"
+                  placeholder="What are you looking for?"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="query-input"
@@ -96,11 +93,11 @@ function App() {
         </section>
 
         <section className="results-section">
-          <h2 className="results-title">Search Results</h2>
-          {loading && <p className="loading-text">Searching and indexing content...</p>}
+          <h2 className="results-title">Results</h2>
+          {loading && <p className="loading-text">Fetching and analyzing content...</p>}
           {!loading && results.length === 0 && !error && (
             <p className="placeholder">
-              No results yet. Submit a URL and query to see matches here.
+              Enter a URL and search query above to get started
             </p>
           )}
           <div className="results-list">
@@ -117,7 +114,7 @@ function App() {
                     className="view-html-button"
                     onClick={() => toggleExpand(index)}
                   >
-                    <span className="html-icon">&lt;/&gt;</span> View HTML {expandedItems[index] ? '▲' : '▼'}
+                    <span className="html-icon">&lt;/&gt;</span> {expandedItems[index] ? 'Hide' : 'Show'} Content {expandedItems[index] ? '▲' : '▼'}
                   </button>
                   {expandedItems[index] && (
                     <div className="html-preview">
@@ -137,7 +134,7 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>Figure: Sample Demo</p>
+        <p>Semantic Search Demo</p>
       </footer>
     </div>
   );

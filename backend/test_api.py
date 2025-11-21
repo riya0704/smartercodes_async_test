@@ -1,8 +1,3 @@
-"""
-Simple test script to verify the backend API is working correctly.
-Run this after starting the backend and Weaviate services.
-"""
-
 import requests
 import json
 import time
@@ -10,82 +5,82 @@ import time
 BASE_URL = "http://localhost:8000"
 
 def test_health():
-    """Test the health endpoint"""
-    print("Testing /health endpoint...")
+    """Check if the API is up and running"""
+    print("Checking health endpoint...")
     try:
-        response = requests.get(f"{BASE_URL}/health")
-        response.raise_for_status()
-        print(f"✓ Health check passed: {response.json()}")
+        resp = requests.get(f"{BASE_URL}/health")
+        resp.raise_for_status()
+        print(f"✓ Server is up: {resp.json()}")
         return True
     except Exception as e:
-        print(f"✗ Health check failed: {e}")
+        print(f"✗ Server not responding: {e}")
         return False
 
 def test_search():
-    """Test the search endpoint with a sample URL"""
-    print("\nTesting /api/search endpoint...")
+    """Try a real search to make sure everything works"""
+    print("\nTesting search...")
     
-    payload = {
+    test_data = {
         "url": "https://en.wikipedia.org/wiki/Python_(programming_language)",
         "query": "programming language features"
     }
     
     try:
-        print(f"Sending request with URL: {payload['url']}")
-        print(f"Query: {payload['query']}")
+        print(f"URL: {test_data['url']}")
+        print(f"Query: '{test_data['query']}'")
         
-        response = requests.post(
+        resp = requests.post(
             f"{BASE_URL}/api/search",
-            json=payload,
+            json=test_data,
             timeout=60
         )
-        response.raise_for_status()
+        resp.raise_for_status()
         
-        data = response.json()
+        data = resp.json()
         results = data.get("results", [])
         
-        print(f"\n✓ Search successful! Found {len(results)} results")
+        print(f"\n✓ Got {len(results)} results!")
         
         if results:
-            print("\nTop 3 results:")
+            print("\nTop 3 matches:")
             for i, result in enumerate(results[:3], 1):
-                content_preview = result['content'][:100] + "..."
-                print(f"\n{i}. Score: {result['score']:.4f}")
-                print(f"   Content: {content_preview}")
+                preview = result['content'][:80] + "..."
+                print(f"\n{i}. Match: {result['score']:.2%}")
+                print(f"   {preview}")
         
         return True
         
     except requests.exceptions.Timeout:
-        print("✗ Request timed out (this is normal for first request as models load)")
-        print("  Try running the test again in a few minutes")
+        print("✗ Timed out - first request can be slow while models load")
+        print("  Wait a minute and try again")
         return False
     except Exception as e:
-        print(f"✗ Search failed: {e}")
+        print(f"✗ Failed: {e}")
         return False
 
 def main():
-    print("=" * 60)
-    print("Backend API Test Suite")
-    print("=" * 60)
-    print("\nMake sure the backend and Weaviate are running:")
-    print("  docker-compose up")
-    print("\nWaiting 5 seconds for services to be ready...")
-    time.sleep(5)
+    print("=" * 50)
+    print("API Test")
+    print("=" * 50)
+    print("\nMake sure the backend is running first!")
+    print("(run_server.bat or uvicorn command)\n")
     
-    # Run tests
+    time.sleep(2)
+    
+    # Run the tests
     health_ok = test_health()
     
     if health_ok:
         search_ok = test_search()
         
-        print("\n" + "=" * 60)
-        if health_ok and search_ok:
-            print("✓ All tests passed!")
+        print("\n" + "=" * 50)
+        if search_ok:
+            print("✓ Everything works!")
         else:
-            print("✗ Some tests failed. Check the output above.")
-        print("=" * 60)
+            print("✗ Search test failed")
+        print("=" * 50)
     else:
-        print("\n✗ Backend is not responding. Check if services are running.")
+        print("\n✗ Can't reach the backend - is it running?")
 
 if __name__ == "__main__":
     main()

@@ -1,58 +1,64 @@
-# Website DOM Search - Semantic Search Application
+# Website Semantic Search
 
-A full-stack application that performs AI-powered semantic search on website content. Enter any URL and search query to find the top 10 most relevant content chunks.
+A full-stack app that lets you search through any website using AI-powered semantic search. Just paste a URL and your search query, and it'll find the most relevant content chunks.
 
-## Features
+## Demo Video
 
-- Semantic search using Sentence Transformers
-- Chunks content into up to 500 tokens each
-- Returns top 10 results sorted by relevance
-- Clean UI with collapsible HTML preview
-- Match percentage indicators
+**Note:** The demo video is a screen recording showing the application in action. Since this is a visual demonstration of the UI and functionality, there's no audio narration - the video speaks for itself by showing the search process, results display, and interaction flow.
+
+## What it does
+
+- Fetches and parses HTML from any URL
+- Breaks content into ~500 token chunks with overlap
+- Uses sentence transformers to create embeddings
+- Finds top 10 most relevant chunks using cosine similarity
+- Shows match scores and lets you expand to see full content
 
 ## Tech Stack
 
-- **Frontend**: React + Vite
-- **Backend**: FastAPI (Python)
-- **NLP**: BERT tokenizer + Sentence Transformers
-- **Vector DB**: Weaviate (optional) or In-Memory
+- **Frontend**: React with Vite (fast dev server)
+- **Backend**: FastAPI (Python web framework)
+- **NLP**: BERT tokenizer for chunking, Sentence Transformers for embeddings
+- **Storage**: In-memory (standalone mode) or Weaviate vector DB (optional)
 
-## Prerequisites
+## What you need
 
-- Python 3.10+
-- Node.js 18+
-- 4GB RAM minimum
-- Internet connection (for first-time model downloads)
+- Python 3.10 or newer
+- Node.js 18 or newer
+- At least 4GB RAM
+- Internet (models download on first run, ~500MB)
 
-## Quick Start
+## Getting Started
 
-### 1. Backend Setup
+### Backend
+
+First, set up the Python environment:
 
 ```bash
 cd backend
 python -m venv venv
 venv\Scripts\activate          # Windows
-# source venv/bin/activate     # Linux/Mac
+# source venv/bin/activate     # Mac/Linux
 pip install -r requirements.txt
 ```
 
-### 2. Start Backend
+Then start the server:
 
 ```bash
 # Windows
 .\run_server.bat
 
-# Linux/Mac
+# Mac/Linux
 python -m uvicorn app.main_standalone:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Note**: First startup downloads models (~500MB, takes 2-5 minutes). Subsequent starts are instant.
+**First run takes a few minutes** because it downloads the ML models (~500MB). After that it starts instantly.
 
-Backend runs at: `http://localhost:8000`
+The API will be running at `http://localhost:8000`
 
-### 3. Frontend Setup
+### Frontend
 
-Open new terminal:
+Open a new terminal and:
 
 ```bash
 cd frontend
@@ -60,15 +66,15 @@ npm install
 npm run dev
 ```
 
-Frontend runs at: `http://localhost:5173`
+This starts the dev server at `http://localhost:5173`
 
-### 4. Use Application
+### Try it out
 
-1. Open browser: `http://localhost:5173`
-2. Enter URL: `https://en.wikipedia.org/wiki/Python_(programming_language)`
-3. Enter query: `programming language features`
-4. Click Search
-5. View top 10 results
+1. Go to `http://localhost:5173` in your browser
+2. Paste a URL (try `https://en.wikipedia.org/wiki/Python_(programming_language)`)
+3. Enter a search query (like `programming language features`)
+4. Hit Search
+5. Check out the top 10 matching chunks
 
 ## Dependencies
 
@@ -164,21 +170,17 @@ curl http://localhost:8000/health
 
 ## Testing
 
-### Test URLs
+Some URLs to try:
 
-**Small** (1-3 chunks):
-```
-URL: https://smarter.codes/
-Query: AI
-```
+**Small site** (few chunks):
+- URL: `https://smarter.codes/`
+- Query: `AI`
 
-**Large** (10+ chunks):
-```
-URL: https://en.wikipedia.org/wiki/Python_(programming_language)
-Query: programming language
-```
+**Larger site** (many chunks):
+- URL: `https://en.wikipedia.org/wiki/Python_(programming_language)`
+- Query: `programming language`
 
-### Run Test Script
+You can also run the test script:
 
 ```bash
 cd backend
@@ -207,84 +209,36 @@ lsof -ti:8000 | xargs kill -9
 - Restart backend server
 - Clear browser cache
 
-## Project Structure
+## How it works
 
-```
-.
-├── backend/
-│   ├── app/
-│   │   ├── main.py              # Weaviate version
-│   │   └── main_standalone.py   # In-memory version
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── run_server.bat
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx
-│   │   └── styles.css
-│   ├── package.json
-│   └── vite.config.js
-├── docker-compose.yml
-└── README.md
-```
+The search process:
 
-## How It Works
+1. Fetch the HTML from the URL you provide
+2. Strip out scripts, styles, and other junk
+3. Use BERT tokenizer to count tokens
+4. Split text into chunks of ~500 tokens (with 50 words of overlap so we don't cut sentences awkwardly)
+5. Generate embeddings for each chunk using Sentence Transformers
+6. Store chunks with their embeddings in memory
+7. When you search, encode your query and compare it to all chunks using cosine similarity
+8. Return the top 10 best matches
 
-1. **Fetch** HTML from URL
-2. **Clean** content (remove scripts, styles)
-3. **Tokenize** using BERT
-4. **Chunk** into 500-token segments with 50-word overlap
-5. **Embed** chunks using Sentence Transformers
-6. **Index** in vector store
-7. **Search** using cosine similarity
-8. **Return** top 10 results
+## Docker (Optional)
 
-## Configuration
-
-### Environment Variables
-
-Create `.env` (optional):
-```env
-WEAVIATE_URL=http://weaviate:8080
-API_PORT=8000
-VITE_API_BASE=http://localhost:8000
-```
-
-### CORS Settings
-
-Edit `backend/app/main_standalone.py`:
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Change for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-## Docker Deployment
+If you want to use Docker:
 
 ```bash
-# Start all services
+# Start backend with Weaviate
 docker-compose up --build -d
 
-# Start frontend
+# Frontend still needs to run locally
 cd frontend
 npm install
 npm run dev
 
-# Stop services
+# Stop everything
 docker-compose down
 ```
 
-## Documentation
+## Notes
 
-- `CHUNKING_STRATEGY.md` - Chunking implementation details
-- `TESTING_GUIDE.md` - Comprehensive testing guide
-- `backend/TROUBLESHOOTING.md` - Detailed error solutions
-
-## License
-
-Educational project for fullstack development assignment.
-# smartercodes_async_test
+This was built as a learning project to understand semantic search and vector embeddings. The standalone version keeps everything in memory which is fine for demos but you'd want to use Weaviate or another vector DB for production.
